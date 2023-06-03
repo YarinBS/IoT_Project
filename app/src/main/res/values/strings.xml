@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Chaquopy_tutorial</string>
+    <string name="devices">Bluetooth Devices</string>
+    <string name="opening">Hello World</string>
+</resources>
