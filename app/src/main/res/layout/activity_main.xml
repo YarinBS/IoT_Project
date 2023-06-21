@@ -16,6 +16,12 @@
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         tools:visibility="visible">
 
+<!--        <androidx.appcompat.widget.Toolbar-->
+<!--            android:id="@+id/toolbar"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="?attr/actionBarSize"-->
+<!--            android:background="?attr/colorPrimary" />-->
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <RelativeLayout
@@ -32,7 +38,7 @@
 <!--            android:layout_alignParentBottom="true"-->
 <!--            android:layout_marginEnd="76dp"-->
 <!--            android:layout_marginBottom="363dp"-->
-<!--&lt;!&ndash;            android:text="@string/opening"&ndash;&gt;-->
+<!--            android:text="@string/opening"-->
 <!--            android:textSize="50sp"-->
 <!--            app:layout_constraintBottom_toBottomOf="parent"-->
 <!--            app:layout_constraintLeft_toLeftOf="parent"-->
