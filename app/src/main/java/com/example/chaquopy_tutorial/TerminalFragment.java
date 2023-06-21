@@ -1,5 +1,6 @@
 package com.example.chaquopy_tutorial;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -8,12 +9,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.method.ScrollingMovementMethod;
+
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,15 +23,26 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
@@ -49,8 +62,11 @@ import java.lang.Math;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
     int counter = 0;
+    int steps = 0;
 
     Double N;
+
+    String selectedStep;
 
     boolean StartFlag = false;
     boolean StopFlag = false;
@@ -72,7 +88,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     LineChart mpLineChart;
     LineDataSet lineDataSet;
-//    LineDataSet lineDataSet2;
+    //    LineDataSet lineDataSet2;
 //    LineDataSet lineDataSet3;
     ArrayList<ILineDataSet> dataSet = new ArrayList<>();
     LineData data;
@@ -166,7 +182,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         View view = inflater.inflate(R.layout.fragment_terminal, container, false);
         receiveText = view.findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
-        receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
+//        receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
         lineDataSet = new LineDataSet(emptyDataValues(), "N");
@@ -184,7 +200,25 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         Button buttonResetRecording = (Button) view.findViewById(R.id.reset);
         Button buttonSaveRecording = (Button) view.findViewById(R.id.save);
 
-        ToggleButton mode = view.findViewById(R.id.modeButton);
+
+       Spinner stepsSpinner = view.findViewById(R.id.stepsSpinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this.getActivity(), R.array.steps_array, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        stepsSpinner.setAdapter(adapter);
+        stepsSpinner.setSelection(0);
+
+        stepsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                selectedStep = adapterView.getItemAtPosition(i).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         EditText fileName = view.findViewById(R.id.fileName);
         EditText numberOfSteps = view.findViewById(R.id.NumberOfSteps);
@@ -193,22 +227,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             public void onClick(View v) {
                 Toast.makeText(getContext(), "Clear", Toast.LENGTH_SHORT).show();
                 LineData data = mpLineChart.getData();
-                for (int i = 0; i < 3; i++) {
-                    ILineDataSet set = data.getDataSetByIndex(i);
-                    data.getDataSetByIndex(i);
-                    while (set.removeLast()) {
-                    }
+                ILineDataSet set = data.getDataSetByIndex(0);
+                data.getDataSetByIndex(0);
+                while (set.removeLast()) {
                 }
 
                 if (StopFlag) {
                     lineDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
-//                    lineDataSet2.notifyDataSetChanged(); // let the data know a dataSet changed
-//                    lineDataSet3.notifyDataSetChanged(); // let the data know a dataSet changed
                     mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
                     mpLineChart.invalidate(); // refresh
                 }
 
                 counter = 0;
+                steps = 0;
+                receiveText.setText("");
 
             }
         });
@@ -217,21 +249,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             public void onClick(View v) {
                 if (!fileName.getText().toString().isEmpty() && !numberOfSteps.getText().toString().isEmpty()) {
                     Toast.makeText(getContext(), "Save", Toast.LENGTH_SHORT).show();
-                    writeToCsv(rows, fileName.getText().toString(), numberOfSteps.getText().toString(), mode);
-                }
-                else {
+                    writeToCsv(rows, fileName.getText().toString(), numberOfSteps.getText().toString());
+
+                    // Also reset
+                    LineData data = mpLineChart.getData();
+                    ILineDataSet set = data.getDataSetByIndex(0);
+                    data.getDataSetByIndex(0);
+                    while (set.removeLast()) {
+                    }
+
+                    lineDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
+                    mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
+                    mpLineChart.invalidate(); // refresh
+
+                    counter = 0;
+                    steps = 0;
+                    // Clear saved records
+                    ArrayList<String[]> rows = new ArrayList<>();
+                    receiveText.setText("");
+                } else {
                     Toast.makeText(getContext(), "Fill all the necessary values", Toast.LENGTH_SHORT).show();
                 }
-
-                // Also reset
-                LineData data = mpLineChart.getData();
-                ILineDataSet set = data.getDataSetByIndex(0);
-                data.getDataSetByIndex(0);
-                while(set.removeLast()){}
-                counter = 0;
-                // Clear saved records
-                ArrayList<String[]> rows = new ArrayList<>();
-                receiveText.setText("");
             }
         });
 
@@ -267,16 +305,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 LineData data = mpLineChart.getData();
                 ILineDataSet set = data.getDataSetByIndex(0);
                 data.getDataSetByIndex(0);
-                while(set.removeLast()){}
+                while (set.removeLast()) {
+                }
 
 
                 lineDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
-//                lineDataSet2.notifyDataSetChanged(); // let the data know a dataSet changed
-//                lineDataSet3.notifyDataSetChanged(); // let the data know a dataSet changed
                 mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
                 mpLineChart.invalidate(); // refresh
 
                 counter = 0;
+                steps = 0;
                 // Clear saved records
                 rows = new ArrayList<>();
                 receiveText.setText("");
@@ -284,7 +322,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 // Resetting text fields and mode button
                 fileName.setText("");
                 numberOfSteps.setText("");
-                mode.setChecked(false);
             }
         });
 
@@ -358,40 +395,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         service.disconnect();
     }
 
-//    private void send(String str) {
-//        if (connected != Connected.True) {
-//            Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-//        try {
-//            String msg;
-//            byte[] data;
-//            if (hexEnabled) {
-//                StringBuilder sb = new StringBuilder();
-//                TextUtil.toHexString(sb, TextUtil.fromHexString(str));
-//                TextUtil.toHexString(sb, newline.getBytes());
-//                msg = sb.toString();
-//                data = TextUtil.fromHexString(msg);
-//            } else {
-//                msg = str;
-//                data = (str + newline).getBytes();
-//            }
-//            SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
-//            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//            receiveText.append(spn);
-//            service.write(data);
-//        } catch (Exception e) {
-//            onSerialIoError(e);
-//        }
-//    }
 
     private void receive(byte[] message) {  // This part gets the Arduino reading
 
         if (hexEnabled) {
             receiveText.append(TextUtil.toHexString(message) + '\n');
         } else {
-            if (StopFlag) {}
+            if (StopFlag) {
+            }
             if (StartFlag) {
+
+
                 // All the stuff in receive() goes here
                 String msg = new String(message);
                 if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
@@ -406,17 +420,22 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                         parts = clean_str(parts);
 
 
-                        // parse string values, in this case [0] is tmp & [1] is count (t)
-                        String row[] = new String[]{String.valueOf((double) counter / 10), parts[0], parts[1], parts[2]};
-
                         // In case we get a reading like '8.02-0.01' or '8.158.14', we take only the first 4 characters
                         if (parts[2].length() > 5) {
-                            row[2] = row[2].substring(0, 4);
+                            parts[2] = parts[2].substring(0, 4);
                         }
 
-                        rows.add(row);
-
+                        // parse string values, in this case [0] is tmp & [1] is count (t)
+                        String row[] = new String[]{String.valueOf((double) counter / 10), parts[0], parts[1], parts[2]};
                         N = Math.sqrt(Math.pow(Double.parseDouble(parts[0]), 2) + Math.pow(Double.parseDouble(parts[1]), 2) + Math.pow(Double.parseDouble(parts[2]), 2));
+
+
+                        rows.add(row);
+                        double threshold = 10.0;
+
+                        if (N > threshold) {
+                            steps++;
+                        }
 
 
                         // add received values to line dataset for plotting the linechart
@@ -438,7 +457,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                     pendingNewline = msg.charAt(msg.length() - 1) == '\r';
                 }
-                receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
+
+                receiveText.setText("Estimated Actual steps: " + (steps));
             }
 
         }
@@ -450,7 +470,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         receiveText.append(spn);
     }
 
-    private void writeToCsv(ArrayList<String[]> rows, String fileName, String numberOfSteps, ToggleButton mode) {
+    private void writeToCsv(ArrayList<String[]> rows, String fileName, String numberOfSteps) {
         try {
             //     create new csv unless file already exists
             File file = new File("/sdcard/csv_dir/");
@@ -463,21 +483,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             Date date = new Date();
             String row2[] = new String[]{"EXPERIMENT TIME: ", datetime.format(date)};
             csvWriter.writeNext(row2);
-            if (mode.isChecked()) {
-                String row3[] = new String[]{"ACTIVITY TYPE: ", mode.getTextOn().toString()};
-                csvWriter.writeNext(row3);
-            } else {
-                String row3[] = new String[]{"ACTIVITY TYPE: ", mode.getTextOff().toString()};
-                csvWriter.writeNext(row3);
-            }
+
+            String row3[] = new String[]{"STEP TYPE: ", selectedStep};
+            csvWriter.writeNext(row3);
+
 
             String row4[] = new String[]{"COUNT OF ACTUAL STEPS: ", numberOfSteps};
             csvWriter.writeNext(row4);
-            String row5[] = new String[]{"ESTIMATED NUMBER OF STEPS: ", String.valueOf(N)};
-            csvWriter.writeNext(row5);
             csvWriter.writeNext(new String[]{});
-            String row6[] = new String[]{"Time[sec]", "ACC X", "ACC Y", "ACC Z"};
-            csvWriter.writeNext(row6);
+            String row5[] = new String[]{"Time[sec]", "ACC X", "ACC Y", "ACC Z"};
+            csvWriter.writeNext(row5);
             for (int i = 0; i < rows.size(); i++) {
                 csvWriter.writeNext(rows.get(i));
             }

@@ -35,15 +35,6 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         else
             onBackStackChanged();
 
-        if (! Python.isStarted()) {
-            Python.start(new AndroidPlatform(this));
-        }
-
-        Python py =  Python.getInstance();
-        PyObject pyobj = py.getModule("test");
-        PyObject obj = pyobj.callAttr("main");
-//        textview.setText(obj.toString());
-
 
     }
 

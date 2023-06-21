@@ -41,14 +41,6 @@ public class LoadCSV extends AppCompatActivity {
         csvData = CsvRead("/sdcard/csv_dir/" + receivedFilename + ".csv");
 
         LineDataSet lineDataSet = new LineDataSet(DataValuesN(csvData), "N");
-//        LineDataSet lineDataSet2 = new LineDataSet(DataValues(csvData, 1), "Y value");
-//        LineDataSet lineDataSet3 = new LineDataSet(DataValues(csvData, 2), "Z value");
-//        lineDataSet1.setColor(Color.RED);
-//        lineDataSet2.setColor(Color.GREEN);
-//        lineDataSet3.setColor(Color.BLUE);
-//        lineDataSet1.setCircleColor(Color.RED);
-//        lineDataSet2.setCircleColor(Color.GREEN);
-//        lineDataSet3.setCircleColor(Color.BLUE);
 
         ArrayList<ILineDataSet> dataSet = new ArrayList<>();
         dataSet.add(lineDataSet);
@@ -88,35 +80,15 @@ public class LoadCSV extends AppCompatActivity {
         return CsvData;
     }
 
-
-
-    private ArrayList<Entry> DataValues(ArrayList<String[]> csvData, int idx) {
-        ArrayList<Entry> dataVals = new ArrayList<Entry>();
-        int counter = 0;
-        for (int i = 6; i < csvData.size(); i++) {
-
-            try {
-                dataVals.add(new Entry(counter, Float.parseFloat(csvData.get(i)[idx+1])));
-            } catch (NumberFormatException e) {
-                dataVals.add(new Entry(counter, Float.parseFloat(csvData.get(i)[idx+1].substring(0, 4))));
-            }
-            counter++;
-        }
-        return dataVals;
-    }
-
     private ArrayList<Entry> DataValuesN(ArrayList<String[]> csvData) {
         ArrayList<Entry> dataVals = new ArrayList<Entry>();
         int counter = 0;
         Double N;
-        for (int i = 7; i < csvData.size(); i++) {
+        for (int i = 6; i < csvData.size(); i++) {
             N = Math.sqrt(Math.pow(Double.parseDouble(csvData.get(i)[1]), 2) + Math.pow(Double.parseDouble(csvData.get(i)[2]), 2) + Math.pow(Double.parseDouble(csvData.get(i)[3]), 2));
 
-            try {
-                dataVals.add(new Entry(counter, Float.parseFloat(String.valueOf(N))));
-            } catch (NumberFormatException e) {
-                dataVals.add(new Entry(counter, Float.parseFloat(String.valueOf(N).substring(0, 4))));
-            }
+            dataVals.add(new Entry(counter, Float.parseFloat(String.valueOf(N))));
+
             counter++;
         }
         return dataVals;
