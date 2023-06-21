@@ -2,4 +2,13 @@
     <string name="app_name">Chaquopy_tutorial</string>
     <string name="devices">Bluetooth Devices</string>
     <string name="opening">Hello World</string>
+
+
+    <string-array name="steps_array">
+        <item>Step 1</item>
+        <item>Step 2</item>
+        <item>Step 3</item>
+        <item>Step 4</item>
+    </string-array>
+
 </resources>
