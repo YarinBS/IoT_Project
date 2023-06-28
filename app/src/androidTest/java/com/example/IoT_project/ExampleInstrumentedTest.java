@@ -1,4 +1,4 @@
-package com.example.chaquopy_tutorial;
+package com.example.IoT_project;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.chaquopy_tutorial", appContext.getPackageName());
+        assertEquals("com.example.IoT_project", appContext.getPackageName());
     }
 }

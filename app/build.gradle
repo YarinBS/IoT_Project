@@ -9,7 +9,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.example.chaquopy_turital"
+        applicationId "com.example.IoT_project"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -49,7 +49,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'com.example.chaquopy_tutorial'
+    namespace 'com.example.IoT_project'
 }
 
 dependencies {

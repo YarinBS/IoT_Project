@@ -1,4 +1,4 @@
-package com.example.chaquopy_tutorial;
+package com.example.IoT_project;
 
 import org.junit.Test;
 
