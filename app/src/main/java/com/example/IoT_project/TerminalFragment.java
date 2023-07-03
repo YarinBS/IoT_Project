@@ -1,6 +1,6 @@
 package com.example.IoT_project;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 
@@ -34,13 +33,19 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,6 +53,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import java.lang.Math;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
     int counter = 0;
@@ -65,7 +74,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String deviceAddress;
     private SerialService service;
 
-    private TextView receiveText;
     private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
 
@@ -77,8 +85,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     LineChart mpLineChart;
     LineDataSet lineDataSet;
-    //    LineDataSet lineDataSet2;
-//    LineDataSet lineDataSet3;
     ArrayList<ILineDataSet> dataSet = new ArrayList<>();
     LineData data;
 
@@ -169,6 +175,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_terminal, container, false);
+
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
         lineDataSet = new LineDataSet(emptyDataValues(), "N");
 
@@ -203,15 +210,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         });
 
-        EditText fileName = view.findViewById(R.id.fileName);
+        EditText userName = view.findViewById(R.id.userName);
         EditText numberOfSteps = view.findViewById(R.id.NumberOfSteps);
 
 
         buttonSaveRecording.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (!fileName.getText().toString().isEmpty() && !numberOfSteps.getText().toString().isEmpty()) {
+                if (!userName.getText().toString().isEmpty() && !numberOfSteps.getText().toString().isEmpty()) {
                     Toast.makeText(getContext(), "Save", Toast.LENGTH_SHORT).show();
-                    writeToCsv(rows, fileName.getText().toString(), numberOfSteps.getText().toString());
+                    writeToCsv(rows, userName.getText().toString(), numberOfSteps.getText().toString(), stepsSpinner.getSelectedItem().toString());
 
                     // Also reset
                     LineData data = mpLineChart.getData();
@@ -224,29 +231,30 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
                     mpLineChart.invalidate(); // refresh
 
+                    YAxis leftAxis = mpLineChart.getAxisLeft();
+                    YAxis rightAxis = mpLineChart.getAxisRight();
+                    XAxis xAxis = mpLineChart.getXAxis();
+
+                    leftAxis.resetAxisMinimum(); // Reset the minimum value of the left y-axis
+                    leftAxis.resetAxisMaximum(); // Reset the maximum value of the left y-axis
+                    rightAxis.resetAxisMinimum(); // Reset the minimum value of the right y-axis
+                    rightAxis.resetAxisMaximum(); // Reset the maximum value of the right y-axis
+                    xAxis.resetAxisMinimum(); // Reset the minimum value of the x-axis
+                    xAxis.resetAxisMaximum(); // Reset the maximum value of the x-axis
+
                     counter = 0;
                     steps = 0;
                     // Clear saved records
                     ArrayList<String[]> rows = new ArrayList<>();
-                    receiveText.setText("");
-                    fileName.setText("");
+                    userName.setText("");
                     numberOfSteps.setText("");
                     stepsSpinner.setSelection(0);
-                } else if (new File(fileName.getText().toString() + ".csv").exists()){
-                    Toast.makeText(getContext(), "A file with this name already exists. Please select a different file name", Toast.LENGTH_SHORT).show();
-                }else{
+                } else{
                     Toast.makeText(getContext(), "Fill all the necessary values", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-//        buttonCsvShow.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                OpenLoadCSV(fileName.getText().toString());
-//
-//            }
-//        });
 
         buttonStartRecording.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -280,21 +288,33 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
                 mpLineChart.invalidate(); // refresh
 
+                YAxis leftAxis = mpLineChart.getAxisLeft();
+                YAxis rightAxis = mpLineChart.getAxisRight();
+                XAxis xAxis = mpLineChart.getXAxis();
+
+                leftAxis.resetAxisMinimum(); // Reset the minimum value of the left y-axis
+                leftAxis.resetAxisMaximum(); // Reset the maximum value of the left y-axis
+                rightAxis.resetAxisMinimum(); // Reset the minimum value of the right y-axis
+                rightAxis.resetAxisMaximum(); // Reset the maximum value of the right y-axis
+                xAxis.resetAxisMinimum(); // Reset the minimum value of the x-axis
+                xAxis.resetAxisMaximum(); // Reset the maximum value of the x-axis
+
                 counter = 0;
                 steps = 0;
                 // Clear saved records
                 rows = new ArrayList<>();
-                receiveText.setText("");
 
                 // Resetting text fields and mode button
-                fileName.setText("");
+                userName.setText("");
                 numberOfSteps.setText("");
                 stepsSpinner.setSelection(0);
             }
         });
 
+
         return view;
     }
+
 
 
     @Override
@@ -307,7 +327,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.clear) {
-            receiveText.setText("");
             return true;
         } else if (id == R.id.newline) {
             String[] newlineNames = getResources().getStringArray(R.array.newline_names);
@@ -367,7 +386,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void receive(byte[] message) {  // This part gets the Arduino reading
 
         if (hexEnabled) {
-            receiveText.append(TextUtil.toHexString(message) + '\n');
         } else {
             if (StopFlag) {
             }
@@ -415,15 +433,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                     }
 
-                    msg = msg.replace(TextUtil.newline_crlf, TextUtil.newline_lf);
-                    // send msg to function that saves it to csv
-                    // special handling if CR and LF come in separate fragments
-                    if (pendingNewline && msg.charAt(0) == '\n') {
-                        Editable edt = receiveText.getEditableText();
-                        if (edt != null && edt.length() > 1)
-                            edt.replace(edt.length() - 2, edt.length(), "");
-                    }
-                    pendingNewline = msg.charAt(msg.length() - 1) == '\r';
                 }
 
             }
@@ -434,42 +443,188 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void status(String str) {
         SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
         spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        receiveText.append(spn);
     }
 
-    private void writeToCsv(ArrayList<String[]> rows, String fileName, String numberOfSteps) {
+    @SuppressLint("DefaultLocale")
+    private void writeToCsv(ArrayList<String[]> rows, String userName, String numberOfSteps, String selectedStep) {
         try {
-            //     create new csv unless file already exists
-            File file = new File("/sdcard/csv_dir/");
-            file.mkdirs();
-            String csv = "/sdcard/csv_dir/" + fileName + ".csv";
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, true));
-            String row1[] = new String[]{"NAME: ", fileName + ".csv"};
-            csvWriter.writeNext(row1);
-            SimpleDateFormat datetime = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-            Date date = new Date();
-            String row2[] = new String[]{"EXPERIMENT TIME: ", datetime.format(date)};
-            csvWriter.writeNext(row2);
-
-            String row3[] = new String[]{"STEP TYPE: ", selectedStep};
-            csvWriter.writeNext(row3);
-
-
-            String row4[] = new String[]{"COUNT OF ACTUAL STEPS: ", numberOfSteps};
-            csvWriter.writeNext(row4);
-            csvWriter.writeNext(new String[]{});
-            String row5[] = new String[]{"Time[sec]", "ACC X", "ACC Y", "ACC Z"};
-            csvWriter.writeNext(row5);
-            for (int i = 0; i < rows.size(); i++) {
-                csvWriter.writeNext(rows.get(i));
+            String path = "/sdcard/csv_dir/";
+            String convertUsername = convertUsername(userName);
+            String fileName = generateFileName(convertUsername, selectedStep);
+            // Check if the directory exists, create if necessary
+            File directory = new File(path + "recordings/");
+            if (!directory.exists()) {
+                directory.mkdirs();
             }
 
-            csvWriter.close();
+            // Create the new file if it doesn't exist
+            File file = new File(directory, fileName);
+            if (!file.exists()) {
+                try {
+                    file.createNewFile();
+                    // Perform further file operations if needed
+
+                    String csv = path + "recordings/" + fileName;
+                    CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, true));
+                    String row1[] = new String[]{"NAME: ", userName};
+                    csvWriter.writeNext(row1);
+                    SimpleDateFormat datetime = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    Date date = new Date();
+                    String row2[] = new String[]{"EXPERIMENT TIME: ", datetime.format(date)};
+                    csvWriter.writeNext(row2);
+
+                    String row3[] = new String[]{"STEP TYPE: ", selectedStep};
+                    csvWriter.writeNext(row3);
+
+                    String row4[] = new String[]{"COUNT OF ACTUAL STEPS: ", numberOfSteps};
+                    csvWriter.writeNext(row4);
+                    csvWriter.writeNext(new String[]{});
+                    String row5[] = new String[]{"Time[sec]", "ACC X", "ACC Y", "ACC Z"};
+                    csvWriter.writeNext(row5);
+                    for (String[] row : rows) {
+                        csvWriter.writeNext(row);
+                    }
+                    csvWriter.close();
+                } catch (IOException e) {
+                    // Handle file creation error
+                    e.printStackTrace();
+                }
+            }
+
+            File db_directory = new File(path + "databases/");
+            if (!db_directory.exists()) {
+                db_directory.mkdirs();
+            }
+            // Create the new file if it doesn't exist
+            File db_file = new File(db_directory, convertUsername + ".csv");
+            if (!db_file.exists()) {
+                try {
+                    db_file.createNewFile();
+                    String db_csv = path + "databases/" + convertUsername + ".csv";
+
+
+                    CSVWriter dbWriter = new CSVWriter(new FileWriter(db_csv, true));
+
+                    String[] row1 = new String[]{"Duration Mean: ", ""};
+                    dbWriter.writeNext(row1);
+                    String[] row2 = new String[]{"Duration STD: ", ""};
+                    dbWriter.writeNext(row2);
+                    String[] row3 = new String[]{"Estimated Steps Mean: ", ""};
+                    dbWriter.writeNext(row3);
+                    for (int i = 1; i < 5; i++){
+                        String[] row = new String[]{"Step " + i + " Duration Mean: ", ""};
+                    dbWriter.writeNext(row);
+                    }
+                    dbWriter.writeNext(new String[]{});
+
+                    String[] db_columns = new String[]{"training time", "step", "entered steps", "estimated steps", "training duration"};
+                    dbWriter.writeNext(db_columns);
+                    dbWriter.close();
+                } catch (IOException e) {
+                    // Handle file creation error
+                    e.printStackTrace();
+                }
+
+
+            }
+
+            SimpleDateFormat datetime = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+            Date date = new Date();
+
+            String db_csv = path + "databases/" + convertUsername + ".csv";
+
+
+            CSVWriter dbWriter = new CSVWriter(new FileWriter(db_csv, true));
+
+
+            // Get the start timestamp
+            double startTimestamp = Double.parseDouble(rows.get(0)[0]);
+            // Get the current timestamp
+            double lastTimestamp = Double.parseDouble(rows.get(rows.size() - 1)[0]);
+
+            double duration = lastTimestamp - startTimestamp;
+
+            String[] new_row = new String[]{datetime.format(date), selectedStep, numberOfSteps, String.valueOf(steps), String.valueOf(duration)};
+            dbWriter.writeNext(new_row);
+
+            dbWriter.close();
+            CSVReader dbReader = new CSVReader(new FileReader(db_csv));
+            List<String[]> dbData = dbReader.readAll();
+            dbReader.close();
+
+
+            String[] row1 = dbData.get(0);
+            String[] row2 = dbData.get(1);
+            String[] row3 = dbData.get(2);
+
+            row1[1] = String.format("%,.3f", computeMean(db_csv, 4, ""));
+            row2[1] = String.format("%,.3f",computeStd(db_csv, computeMean(db_csv, 4, ""),4));
+            row3[1] = String.format("%,.3f", computeMean(db_csv, 3,""));
+            for (int i = 1; i < 5; i++){
+                String[] row = dbData.get(i + 2);
+                row[1] = String.format("%,.3f", computeMean(db_csv, 4, "Step " + i));
+                dbData.set(i + 2, row);
+            }
+
+            CSVWriter writer = new CSVWriter(new FileWriter(db_csv, false));
+
+            dbData.set(0, row1);
+            dbData.set(1, row2);
+            dbData.set(2, row3);
+            writer.writeAll(dbData);
+            writer.close();
+
+
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (CsvException e) {
+            throw new RuntimeException(e);
         }
     }
+
+
+    private static String generateFileName(String username, String step) {
+        String baseFileName = username + "_" + step.toLowerCase().replaceAll(" ", "");;
+
+        // Get the list of files with matching names
+        File directory = new File("/sdcard/csv_dir/recordings/");
+        File[] files = directory.listFiles();
+        int count = 0;
+        if (files != null) {
+            for (File file : files) {
+                String filename = file.getName();
+                String pattern = "^" + Pattern.quote(baseFileName) + "_(\\d+)\\.csv$";
+                Pattern regex = Pattern.compile(pattern);
+                Matcher matcher = regex.matcher(filename);
+                if (matcher.matches()) {
+                    try {
+                        int fileCount = Integer.parseInt(matcher.group(1));
+                        count = Math.max(count, fileCount);
+                    } catch (NumberFormatException e) {
+                        // Handle parsing error
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        // Increment the count and append to the base file name
+        count++;
+
+        return baseFileName + "_" + count + ".csv";
+    }
+
+    public static String convertUsername(String username) {
+        String[] nameParts = username.split(" ");
+        StringBuilder convertedName = new StringBuilder();
+        for (String namePart : nameParts) {
+            String formattedPart = namePart.substring(0, 1).toUpperCase() + namePart.substring(1);
+            convertedName.append(formattedPart);
+        }
+        return convertedName.toString();
+    }
+
 
     /*
      * SerialListener
@@ -506,10 +661,63 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         return dataVals;
     }
 
-    private void OpenLoadCSV(String fileName) {
-        Intent intent = new Intent(getContext(), LoadCSV.class);
-        intent.putExtra("FILENAME_KEY", fileName);
-        startActivity(intent);
+    private double computeMean(String filePath, int index, String step) {
+        double sum = 0;
+        int count = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            for (int i=0; i<9; i++){
+                br.readLine();
+            }
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                if (!Objects.equals(step, "")){
+                    if (Objects.equals(values[1].substring(1, values[1].length()-1), step)){
+                        sum += Double.parseDouble(values[index].substring(1, values[index].length()-1));
+                        count++;
+                    }
+
+                }
+                else{
+                    sum += Double.parseDouble(values[index].substring(1, values[index].length()-1));
+                    count++;
+                }
+
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (count > 0) {
+            return (sum / count);
+        } else {
+            return 0;
+        }
     }
+
+    private double computeStd(String filePath, double mean, int index) {
+        double sum = 0;
+        int rowCount = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String row;
+            for (int i=0; i<9; i++){
+                br.readLine();
+            }
+            while ((row = br.readLine()) != null) {
+                String[] values = row.split(",");
+                if (values.length > index) {
+                    double value = Double.parseDouble(values[index].substring(1, values[index].length()-1));
+                    sum += (value - mean) * (value - mean);
+                    rowCount++;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return (float) Math.sqrt(sum / rowCount);
+    }
+
 
 }

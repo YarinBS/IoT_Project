@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
         android:layout_width="match_parent"
@@ -14,24 +15,13 @@
 
     </com.github.mikephil.charting.charts.LineChart>
 
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="?android:attr/listDivider" />
-
-    <TextView
-        android:id="@+id/receive_text"
-        android:layout_width="match_parent"
-        android:layout_height="44dp" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="296dp">
+        android:layout_height="301dp">
 
         <EditText
             android:id="@+id/NumberOfSteps"
-            android:layout_width="165dp"
+            android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:ems="10"
             android:hint="Number of steps..."
@@ -39,18 +29,18 @@
             android:minHeight="48dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.484"
+            app:layout_constraintHorizontal_bias="0.479"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.412" />
+            app:layout_constraintVertical_bias="0.56" />
 
         <EditText
-            android:id="@+id/fileName"
-            android:layout_width="158dp"
-            android:layout_height="43dp"
-            android:layout_marginTop="36dp"
+            android:id="@+id/userName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
             android:ems="10"
-            android:hint="File name..."
+            android:hint="@string/name"
             android:inputType="textPersonName"
             android:minHeight="48dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -60,8 +50,8 @@
 
         <Spinner
             android:id="@+id/stepsSpinner"
-            android:layout_width="158dp"
-            android:layout_height="36dp"
+            android:layout_width="150dp"
+            android:layout_height="50dp"
             app:layout_constraintBottom_toTopOf="@+id/NumberOfSteps"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.466"
@@ -77,49 +67,55 @@
 
         <Button
             android:id="@+id/start"
-            android:layout_width="80dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="16dp"
+            android:layout_width="86dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
             android:text="START"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.303" />
 
         <Button
             android:id="@+id/stop"
-            android:layout_width="70dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="32dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
             android:layout_marginTop="8dp"
             android:text="STOP"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/start"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.303" />
 
         <Button
             android:id="@+id/reset"
-            android:layout_width="70dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="32dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
             android:layout_marginTop="8dp"
             android:text="RESET"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/stop"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.303" />
 
         <Button
             android:id="@+id/save"
-            android:layout_width="70dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="32dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="7dp"
             android:text="SAVE"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.157"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/reset"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.303" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

@@ -27,10 +27,6 @@ public class DevicesFragment extends ListFragment {
     private final ArrayList<BluetoothDevice> listItems = new ArrayList<>();
     private ArrayAdapter<BluetoothDevice> listAdapter;
 
-    private String defaultDeviceName = "Test Device YLG";
-
-    private BluetoothDevice defaultDevice;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,23 +70,13 @@ public class DevicesFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (bluetoothAdapter == null)
+        if(bluetoothAdapter == null)
             setEmptyText("<bluetooth not supported>");
-        else if (!bluetoothAdapter.isEnabled())
+        else if(!bluetoothAdapter.isEnabled())
             setEmptyText("<bluetooth is disabled>");
         else
             setEmptyText("<no bluetooth devices found>");
-
-        if (defaultDevice == null) {
-            findDefaultDevice();
-            if (defaultDevice == null) {
-                // Default device not found, handle accordingly
-                setEmptyText("<default device not found>");
-                return;
-            }
-        }
-
-        connectToDevice(defaultDevice);
+        refresh();
     }
 
     @Override
@@ -106,37 +92,40 @@ public class DevicesFragment extends ListFragment {
         }
     }
 
-    private void findDefaultDevice() {
-        if (bluetoothAdapter != null) {
-            for (BluetoothDevice device : bluetoothAdapter.getBondedDevices()) {
-                if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE && device.getName() != null && device.getName().equals(defaultDeviceName)) {
-                    defaultDevice = device;
-                    return;
-                }
-
-
-            }
+    void refresh() {
+        listItems.clear();
+        if(bluetoothAdapter != null) {
+            for (BluetoothDevice device : bluetoothAdapter.getBondedDevices())
+                if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE)
+                    listItems.add(device);
         }
-        setEmptyText("<default device not found>");
+        Collections.sort(listItems, DevicesFragment::compareTo);
+        listAdapter.notifyDataSetChanged();
     }
 
-
-    private void connectToDevice(BluetoothDevice device) {
-        // Connect to the desired device here
-        if (device != null) {
-            Bundle args = new Bundle();
-            args.putString("device", device.getAddress());
-            Intent intent = new Intent(getActivity(), MainActivity2.class);
-            intent.putExtras(args);
-            startActivity(intent);
-
-        }
+    @Override
+    public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
+        BluetoothDevice device = listItems.get(position-1);
+        Bundle args = new Bundle();
+        args.putString("device", device.getAddress());
+        Fragment fragment = new TerminalFragment();
+        fragment.setArguments(args);
+        getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, "terminal").addToBackStack(null).commit();
     }
 
-
-
-
-
-
-
+    /**
+     * sort by name, then address. sort named devices first
+     */
+    static int compareTo(BluetoothDevice a, BluetoothDevice b) {
+        boolean aValid = a.getName()!=null && !a.getName().isEmpty();
+        boolean bValid = b.getName()!=null && !b.getName().isEmpty();
+        if(aValid && bValid) {
+            int ret = a.getName().compareTo(b.getName());
+            if (ret != 0) return ret;
+            return a.getAddress().compareTo(b.getAddress());
+        }
+        if(aValid) return -1;
+        if(bValid) return +1;
+        return a.getAddress().compareTo(b.getAddress());
+    }
 }

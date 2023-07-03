@@ -2,7 +2,7 @@
     <string name="app_name">IoT_project</string>
     <string name="devices">Bluetooth Devices</string>
     <string name="opening">You can record your salsa steps and you can see statistics about your training.</string>
-    <string name="file_name">File name…</string>
+    <string name="name">Enter your fullname…</string>
     <string name="number_of_steps">Number of steps…</string>
     <string name="recording">RECORDING</string>
     <string name="database">DATABASE</string>
@@ -17,5 +17,18 @@
         <item>Step 3</item>
         <item>Step 4</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="connect_to_bluetooth">Connect to Bluetooth</string>
+    <string name="home">HOME</string>
+    <string name="statictics">Statictics</string>
+    <string name="mean_of_duration">Mean of duration: </string>
+    <string name="std_of_duration">Std of duration:</string>
+    <string name="mean_of_estimated_steps">Mean of estimated steps:</string>
+    <string name="means_of_duration_for_each_step">Means of duration for each step:</string>
+    <string name="step1">step1:</string>
+    <string name="step2">step2:</string>
+    <string name="step3">step3:</string>
+    <string name="step4">step4:</string>
 
 </resources>
