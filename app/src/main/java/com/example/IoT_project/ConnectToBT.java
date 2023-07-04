@@ -75,30 +75,15 @@ public class ConnectToBT extends AppCompatActivity {
             BluetoothDevice defaultDevice = bluetoothAdapter.getRemoteDevice(defaultDeviceAddress);
             if (defaultDevice != null && defaultDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
                 // Check if the default device is currently connected
-                BluetoothProfile a2dpProfile = getA2dpProfile();
-                if (a2dpProfile != null) {
-                    int connectionState = a2dpProfile.getConnectionState(defaultDevice);
-                    if (connectionState == BluetoothProfile.STATE_CONNECTED) {
-                        Toast.makeText(this, "Connecting to default device: " + defaultDevice.getName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Connecting to default device: " + defaultDevice.getName(), Toast.LENGTH_SHORT).show();
 
-                        // Open the new activity here
-                        Bundle args = new Bundle();
-                        args.putString("device", defaultDevice.getAddress());
-                        Fragment fragment = new TerminalFragment();
-                        fragment.setArguments(args);
-                        hideConnectButton();
-                        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, "terminal").addToBackStack(null).commit();
-                    } else {
-                        Toast.makeText(this, "Default device is not currently connected", Toast.LENGTH_SHORT).show();
-                        // Open the DevicesFragment to display available devices
-                        hideConnectButton();
-                        FragmentManager fragmentManager = getSupportFragmentManager();
-                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                        fragmentTransaction.replace(android.R.id.content, new DevicesFragment());
-                        fragmentTransaction.addToBackStack(null);
-                        fragmentTransaction.commit();
-                    }
-                }
+                // Open the new activity here
+                Bundle args = new Bundle();
+                args.putString("device", defaultDevice.getAddress());
+                Fragment fragment = new TerminalFragment();
+                fragment.setArguments(args);
+                hideConnectButton();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, "terminal").addToBackStack(null).commit();
 
             } else {
                 if (defaultDevice == null) {

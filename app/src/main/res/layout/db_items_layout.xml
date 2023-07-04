@@ -28,14 +28,14 @@
 
         <TextView
             android:id="@+id/training_time"
-            android:layout_width="127dp"
+            android:layout_width="104dp"
             android:layout_height="wrap_content"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/step"
-            android:layout_width="wrap_content"
+            android:layout_width="20dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textSize="16sp" />
@@ -60,6 +60,8 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:textSize="16sp" />
+
+
 
     </LinearLayout>
 

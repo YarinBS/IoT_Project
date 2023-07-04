@@ -37,8 +37,8 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             // Set the text for column names (title)
             holder.titleTextViewView.setVisibility(View.VISIBLE);
             holder.titleTextViewView.setText("Your Salsa Training");
-            holder.trainingTimeTextView.setText("Training Time");
-            holder.stepTextView.setText("Step Type");
+            holder.trainingTimeTextView.setText("Time");
+            holder.stepTextView.setText("Step");
             holder.enteredStepsTextView.setText("Entered Steps");
             holder.calculatedStepsTextView.setText("Estimated Steps");
             holder.trainingDurationTextView.setText("Training Duration");

@@ -20,6 +20,7 @@ import java.util.List;
 
 public class LoadStats extends AppCompatActivity {
 
+
     @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
