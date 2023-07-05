@@ -12,10 +12,15 @@ import android.view.View;
 
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 
-public class MainActivity extends AppCompatActivity{
+
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +31,8 @@ public class MainActivity extends AppCompatActivity{
         Button buttonRecord = findViewById(R.id.record_button);
         Button buttonStats = findViewById(R.id.stats_button);
         Button buttonExit = findViewById(R.id.exit_button);
+
+        TextView textview = findViewById(R.id.textview);
 
         buttonDB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,6 +128,7 @@ public class MainActivity extends AppCompatActivity{
                 dialog.show();
             }
         });
+
     }
 
 
@@ -138,7 +146,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void onBackStackChanged() {
-        getSupportActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount()>0);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
     }
 
     @Override

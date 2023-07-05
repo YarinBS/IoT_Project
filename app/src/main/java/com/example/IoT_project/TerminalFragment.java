@@ -14,6 +14,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 
 import android.text.style.ForegroundColorSpan;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,6 +33,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -53,14 +57,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import java.lang.Math;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
     int counter = 0;
-    int steps = 0;
+    PyObject step_class;
 
     Double N;
 
@@ -243,7 +249,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     xAxis.resetAxisMaximum(); // Reset the maximum value of the x-axis
 
                     counter = 0;
-                    steps = 0;
                     // Clear saved records
                     ArrayList<String[]> rows = new ArrayList<>();
                     userName.setText("");
@@ -300,7 +305,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 xAxis.resetAxisMaximum(); // Reset the maximum value of the x-axis
 
                 counter = 0;
-                steps = 0;
                 // Clear saved records
                 rows = new ArrayList<>();
 
@@ -416,14 +420,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                         N = Math.sqrt(Math.pow(Double.parseDouble(parts[0]), 2) + Math.pow(Double.parseDouble(parts[1]), 2) + Math.pow(Double.parseDouble(parts[2]), 2));
 
 
-                        rows.add(row);
-                        double threshold = 10.0;
-
-                        if (N > threshold) {
-                            steps++;
-                        }
-
-
                         // add received values to line dataset for plotting the linechart
                         data.addEntry(new Entry(counter, Float.parseFloat(String.valueOf(N))), 0);
                         lineDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
@@ -485,11 +481,21 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                         csvWriter.writeNext(row);
                     }
                     csvWriter.close();
+
+                    if (! Python.isStarted()) {
+                        Python.start(new AndroidPlatform(getContext()));
+                    }
+
+                    Python py =  Python.getInstance();
+                    PyObject pyobj = py.getModule("test");
+                    step_class = pyobj.callAttr("main", csv);
+
                 } catch (IOException e) {
                     // Handle file creation error
                     e.printStackTrace();
                 }
             }
+//
 
             File db_directory = new File(path + "databases/");
             if (!db_directory.exists()) {
@@ -509,7 +515,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     dbWriter.writeNext(row1);
                     String[] row2 = new String[]{"Duration STD: ", ""};
                     dbWriter.writeNext(row2);
-                    String[] row3 = new String[]{"Estimated Steps Mean: ", ""};
+                    String[] row3 = new String[]{"Most popular step: ", ""};
                     dbWriter.writeNext(row3);
                     for (int i = 1; i < 5; i++){
                         String[] row = new String[]{"Step " + i + " Duration Mean: ", ""};
@@ -517,7 +523,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                     dbWriter.writeNext(new String[]{});
 
-                    String[] db_columns = new String[]{"training time", "step", "entered steps", "estimated steps", "training duration"};
+                    String[] db_columns = new String[]{"training time", "step", "entered steps", "training duration", "step classification"};
                     dbWriter.writeNext(db_columns);
                     dbWriter.close();
                 } catch (IOException e) {
@@ -544,7 +550,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
             double duration = lastTimestamp - startTimestamp;
 
-            String[] new_row = new String[]{datetime.format(date), selectedStep, numberOfSteps, String.valueOf(steps), String.valueOf(duration)};
+            String[] new_row = new String[]{datetime.format(date), selectedStep, numberOfSteps, String.valueOf(step_class), String.valueOf(duration)};
             dbWriter.writeNext(new_row);
 
             dbWriter.close();
@@ -556,14 +562,22 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             String[] row1 = dbData.get(0);
             String[] row2 = dbData.get(1);
             String[] row3 = dbData.get(2);
+            String[] row4 = dbData.get(3);
+
+            String mostPopularStep= "";
+            String lessPopularStep = "";
 
             row1[1] = String.format("%,.3f", computeMean(db_csv, 4, ""));
             row2[1] = String.format("%,.3f",computeStd(db_csv, computeMean(db_csv, 4, ""),4));
-            row3[1] = String.format("%,.3f", computeMean(db_csv, 3,""));
+            Pair<String, String> result = findStepPopularity(db_csv, 1);
+            mostPopularStep = result.first;
+            row3[1] = mostPopularStep;
+            lessPopularStep = result.second;
+            row4[1] = lessPopularStep;
             for (int i = 1; i < 5; i++){
-                String[] row = dbData.get(i + 2);
+                String[] row = dbData.get(i + 3);
                 row[1] = String.format("%,.3f", computeMean(db_csv, 4, "Step " + i));
-                dbData.set(i + 2, row);
+                dbData.set(i + 3, row);
             }
 
             CSVWriter writer = new CSVWriter(new FileWriter(db_csv, false));
@@ -571,6 +585,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             dbData.set(0, row1);
             dbData.set(1, row2);
             dbData.set(2, row3);
+            dbData.set(3, row4);
             writer.writeAll(dbData);
             writer.close();
 
@@ -625,6 +640,56 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         return convertedName.toString();
     }
 
+    private Pair<String, String> findStepPopularity(String filePath, int columnIndex) {
+        // Map to store string occurrences
+        Map<String, Integer> stringOccurrences = new HashMap<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Split the CSV line by comma
+                String[] columns = line.split(",");
+
+                if (columns.length > columnIndex) {
+                    // Get the string value from the desired column
+                    String columnValue = columns[columnIndex].trim();
+
+                    // Update the occurrences count for the string
+                    int count = 0;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        count = stringOccurrences.getOrDefault(columnValue, 0);
+                    }
+                    stringOccurrences.put(columnValue, count + 1);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Find the most popular string
+        int maxCount = 0;
+        int minCount = Integer.MAX_VALUE;
+        String mostPopularStep = "";
+        String lessPopularStep = "";
+
+        for (Map.Entry<String, Integer> entry : stringOccurrences.entrySet()) {
+            String key = entry.getKey();
+            int count = entry.getValue();
+
+            if (count > maxCount) {
+                maxCount = count;
+                mostPopularStep = key;
+            }
+
+            if (count < minCount) {
+                minCount = count;
+                lessPopularStep = key;
+            }
+        }
+
+        return new Pair<>(mostPopularStep, lessPopularStep);
+    }
+
 
     /*
      * SerialListener
@@ -667,7 +732,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            for (int i=0; i<9; i++){
+            for (int i=0; i<10; i++){
                 br.readLine();
             }
             while ((line = br.readLine()) != null) {
@@ -702,7 +767,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         int rowCount = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String row;
-            for (int i=0; i<9; i++){
+            for (int i=0; i<10; i++){
                 br.readLine();
             }
             while ((row = br.readLine()) != null) {

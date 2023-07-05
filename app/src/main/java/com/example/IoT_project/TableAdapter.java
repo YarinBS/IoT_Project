@@ -5,14 +5,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.opencsv.CSVReader;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 
 public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> {
@@ -40,7 +36,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             holder.trainingTimeTextView.setText("Time");
             holder.stepTextView.setText("Step");
             holder.enteredStepsTextView.setText("Entered Steps");
-            holder.calculatedStepsTextView.setText("Estimated Steps");
+            holder.classificationTextView.setText("Classification");
             holder.trainingDurationTextView.setText("Training Duration");
             holder.separatorView.setVisibility(View.VISIBLE);
         } else {
@@ -51,7 +47,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             holder.trainingTimeTextView.setText(row.getTrainingTime());
             holder.stepTextView.setText(row.getStep());
             holder.enteredStepsTextView.setText(row.getEnteredSteps());
-            holder.calculatedStepsTextView.setText(row.getCalculatedSteps());
+            holder.classificationTextView.setText(row.getCalculatedSteps());
             holder.trainingDurationTextView.setText(row.getTrainingDuration());
         }
     }
@@ -66,7 +62,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         TextView trainingTimeTextView;
         TextView stepTextView;
         TextView enteredStepsTextView;
-        TextView calculatedStepsTextView;
+        TextView classificationTextView;
         TextView trainingDurationTextView;
         LinearLayout separatorView;
 
@@ -76,7 +72,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             trainingTimeTextView = itemView.findViewById(R.id.training_time);
             stepTextView = itemView.findViewById(R.id.step);
             enteredStepsTextView = itemView.findViewById(R.id.entered_steps);
-            calculatedStepsTextView = itemView.findViewById(R.id.calculated_steps);
+            classificationTextView = itemView.findViewById(R.id.step_class);
             trainingDurationTextView = itemView.findViewById(R.id.training_duration);
             separatorView = itemView.findViewById(R.id.separator);
         }

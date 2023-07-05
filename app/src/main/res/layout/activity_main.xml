@@ -29,6 +29,16 @@ tools:context=".MainActivity">
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/textview"
+        android:layout_width="0dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="44dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.465"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
         android:layout_width="335dp"
         android:layout_height="114dp"
         android:layout_above="@+id/db_button"

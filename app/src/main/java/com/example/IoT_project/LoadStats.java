@@ -10,13 +10,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class LoadStats extends AppCompatActivity {
 
@@ -46,7 +43,8 @@ public class LoadStats extends AppCompatActivity {
 
         TextView totalMeanDur = findViewById(R.id.total_mean_dur);
         TextView totalStdDur = findViewById(R.id.total_std_dur);
-        TextView totalMeanSteps = findViewById(R.id.total_mean_steps);
+        TextView mostPopularStep = findViewById(R.id.most_popular);
+        TextView lessPopularStep = findViewById(R.id.less_popular);
         TextView step1MeanDur = findViewById(R.id.step1);
         TextView step2MeanDur = findViewById(R.id.step2);
         TextView step3MeanDur = findViewById(R.id.step3);
@@ -54,11 +52,12 @@ public class LoadStats extends AppCompatActivity {
 
         totalMeanDur.setText(statsData.get(0)[1]);
         totalStdDur.setText(statsData.get(1)[1]);
-        totalMeanSteps.setText(statsData.get(2)[1]);
-        step1MeanDur.setText(statsData.get(3)[1]);
-        step2MeanDur.setText(statsData.get(4)[1]);
-        step3MeanDur.setText(statsData.get(5)[1]);
-        step4MeanDur.setText(statsData.get(6)[1]);
+        mostPopularStep.setText(statsData.get(2)[1]);
+        lessPopularStep.setText(statsData.get(3)[1]);
+        step1MeanDur.setText(statsData.get(4)[1]);
+        step2MeanDur.setText(statsData.get(5)[1]);
+        step3MeanDur.setText(statsData.get(6)[1]);
+        step4MeanDur.setText(statsData.get(7)[1]);
 
 
         Button homeButton = (Button) findViewById(R.id.homeButton);
